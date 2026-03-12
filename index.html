@@ -1,201 +1,322 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
-<title>Fighting Game Setup Trainer</title>
-
+<meta charset="UTF-8">
+<title>Fighting Game Trainer</title>
 <style>
-
 body{
-    font-family: Arial;
-    text-align:center;
-    background:#111;
-    color:white;
+  font-family: Arial;
+  text-align:center;
+  background:#111;
+  color:white;
+  margin:0;
 }
-
-video{
-    width:700px;
-    margin-top:20px;
+button{
+  padding:10px 20px;
+  font-size:18px;
+  margin:10px;
+  cursor:pointer;
 }
-
+select{
+  font-size:18px;
+  padding:5px;
+}
+.screen{
+  display:none;
+  padding:20px;
+}
+.active{
+  display:block;
+}
+#setupVideo{
+  width:1200px;
+  max-width:95%;
+  margin-top:20px;
+}
+#inputDisplay{
+  font-size:28px;
+  margin-top:10px;
+}
 #result{
-    font-size:40px;
-    margin-top:20px;
+  font-size:36px;
+  margin-top:10px;
 }
-
+#warmupArrow{
+  font-size:80px;
+  margin:20px;
+}
+#warmupArrow.highlight{
+  color:yellow;
+  transform:scale(1.3);
+}
+#warmupProgressBar{
+  width:500px;
+  max-width:90%;
+  margin:auto;
+  height:18px;
+  background:#333;
+  border-radius:10px;
+}
+#warmupProgressFill{
+  height:100%;
+  width:0%;
+  background:lime;
+}
 </style>
-
 </head>
-
-
 <body>
 
-<h1>Setup Reaction Trainer</h1>
+<!-- MAIN MENU -->
+<div id="menuScreen" class="screen active">
+  <h1>Training Menu</h1>
+  <button onclick="showScreen('trainerScreen')">Character Block Trainer</button>
+  <button onclick="showScreen('warmupScreen')">Warm-Up Practice</button>
+</div>
 
-<select id="characterSelect">
+<!-- CHARACTER BLOCK TRAINER -->
+<div id="trainerScreen" class="screen">
+  <h1>Cross-Up Trainer</h1>
+  <select id="characterSelect">
+    <option value="krillin">Krillin</option>
+  </select>
+  <br><br>
+  <button onclick="startTrainer()">Start Round</button>
+  <br><br>
+  <video id="setupVideo"></video>
+  <div id="inputDisplay"></div>
+  <div id="result"></div>
+  <br>
+  <button onclick="backToMenuTrainer()">Back</button>
+</div>
 
-<option value="krillin">Krillin</option>
-<option value="test2">Test2</option>
-<option value="test3">Test3</option>
-
-</select>
-
-<br><br>
-
-<button onclick="start()">Start Training</button>
-
-<br><br>
-
-<video id="setupVideo"></video>
-
-<div id="inputDisplay"></div>
-
-<div id="result"></div>
-
-#inputDisplay{
-    font-size:30px;
-    margin-top:20px;
-}
+<!-- WARM-UP MINI GAME -->
+<div id="warmupScreen" class="screen">
+  <h1>Warm-Up Practice</h1>
+  <button onclick="startWarmup('easy')">Easy</button>
+  <button onclick="startWarmup('normal')">Normal</button>
+  <button onclick="startWarmup('hard')">Hard</button>
+  <br><br>
+  <div id="warmupTimeTaken"></div>
+  <div id="warmupArrow"></div>
+  <div id="warmupProgress"></div>
+  <div id="warmupInfo"></div>
+  <div id="warmupResult" style="font-size:30px;margin-top:10px;"></div>
+  <br>
+  <button onclick="backToMenuWarmup()">Back</button>
+</div>
 
 <script>
-
-let correctSide
-let answered = false
-
-
-
-function start(){
-
-    answered = false
-
-    document.getElementById("result").innerText = ""
-    document.getElementById("inputDisplay").innerText = ""
-
-    const video = document.getElementById("setupVideo")
-
-    const character = document.getElementById("characterSelect").value
-
-    let random = Math.random() < 0.5
-
-
-    if(random){
-
-        video.src = "videos/" + character + "_left.mp4"
-        correctSide = "right"
-
-    }else{
-
-        video.src = "videos/" + character + "_right.mp4"
-        correctSide = "left"
-
-    }
-
-    video.play()
-
+// ---------------- SCREEN SWITCH ----------------
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  resetResults();
+}
+function resetResults(){
+  document.getElementById("result").innerText="";
+  document.getElementById("inputDisplay").innerText="";
+  document.getElementById("warmupResult").innerText="";
+  document.getElementById("warmupArrow").innerText="";
 }
 
+// ---------------- CHARACTER TRAINER ----------------
+let correctSide="";
+let answered=false;
 
-
-
-function handleInput(direction){
-
-    if(answered) return
-
-    answered = true
-
-    const inputText = direction.toUpperCase()
-
-    document.getElementById("inputDisplay").innerText = "Input: " + inputText
-
-    if(direction === correctSide){
-
-        document.getElementById("result").innerText = "PASS"
-
-    }else{
-
-        document.getElementById("result").innerText = "FAIL"
-
-    }
-
+function startTrainer(){
+  answered=false;
+  document.getElementById("result").innerText="";
+  document.getElementById("inputDisplay").innerText="";
+  let character=document.getElementById("characterSelect").value;
+  const video=document.getElementById("setupVideo");
+  video.currentTime=0;
+  let random=Math.random()<0.5;
+  if(random){
+    video.src="videos/"+character+"_left.mp4";
+    correctSide="right";
+  }else{
+    video.src="videos/"+character+"_right.mp4";
+    correctSide="left";
+  }
+  video.play();
 }
 
-document.addEventListener("keydown", function(event){
-
-    if(event.key === "ArrowLeft"){
-        handleInput("left")
-    }
-
-    if(event.key === "ArrowRight"){
-        handleInput("right")
-    }
-
-})
-
-
-
-
-function checkGamepad(){
-
-    const gamepads = navigator.getGamepads()
-
-    if(!gamepads) return
-
-    const gp = gamepads[0]
-
-    if(!gp) return
-
-    if(answered) return
-
-
-
-    let horizontal = gp.axes[0]
-
-    if(horizontal < -0.5){
-
-        handleInput("left")
-
-    }
-
-    if(horizontal > 0.5){
-
-        handleInput("right")
-
-    }
-
-
-
-    if(gp.buttons[14] && gp.buttons[14].pressed){
-
-        handleInput("left")
-
-    }
-
-    if(gp.buttons[15] && gp.buttons[15].pressed){
-
-        handleInput("right")
-
-    }
-
+function handleTrainerInput(direction){
+  if(answered) return;
+  answered=true;
+  document.getElementById("inputDisplay").innerText="Input: "+direction;
+  if(direction===correctSide){
+    document.getElementById("result").innerText="PASS";
+  }else{
+    document.getElementById("result").innerText="FAIL";
+  }
 }
 
-
-
-
-function gameLoop(){
-
-    checkGamepad()
-
-    requestAnimationFrame(gameLoop)
-
+function backToMenuTrainer(){
+  showScreen('menuScreen');
+  answered=false;
 }
 
+// ---------------- WARM-UP MINI GAME ----------------
+const arrows=["⬅","➡","⬆","⬇"];
+let sequence=[], index=0, mistakes=0, mode="";
+let timer, timeLeft, stopwatchStarted=false, startTime, stopwatch;
 
-gameLoop()
+function startWarmup(selectedMode){
+  stopWarmupTimers();
+  mode=selectedMode;
+  sequence=[];
+  index=0;
+  mistakes=0;
+  stopwatchStarted=false;
+  document.getElementById("warmupResult").innerText="";
+  document.getElementById("warmupArrow").innerText="";
+  document.getElementById("warmupInfo").innerText="";
+  document.getElementById("warmupTimeTaken").innerText="";
+  for(let i=0;i<100;i++) sequence.push(arrows[Math.floor(Math.random()*4)]);
+  document.getElementById("warmupProgress").innerHTML=
+    '<div id="warmupProgressBar"><div id="warmupProgressFill"></div></div>';
+  if(mode==="normal") timeLeft=30;
+  if(mode==="hard") timeLeft=20;
+  if(mode!=="easy"){
+    timer=setInterval(()=>{
+      timeLeft--;
+      updateWarmupInfo();
+      if(timeLeft<=0) endWarmup(false);
+    },1000);
+  }
+  updateWarmupInfo();
+  showArrow();
+}
 
+function stopWarmupTimers(){
+  clearInterval(timer);
+  clearInterval(stopwatch);
+  timer=null;
+  stopwatch=null;
+}
+
+function backToMenuWarmup(){
+  stopWarmupTimers();
+  showScreen('menuScreen');
+}
+
+function showArrow(){
+  if(index>=sequence.length){endWarmup(true); return;}
+  const el=document.getElementById("warmupArrow");
+  el.innerText=sequence[index];
+  el.classList.add("highlight");
+  setTimeout(()=>el.classList.remove("highlight"),200);
+  updateProgress();
+}
+
+function startStopwatch(){
+  if(stopwatchStarted) return;
+  stopwatchStarted=true;
+  startTime=Date.now();
+  stopwatch=setInterval(()=>{
+    let t=((Date.now()-startTime)/1000).toFixed(2);
+    document.getElementById("warmupTimeTaken").innerText="Time: "+t+"s";
+  },50);
+}
+
+function handleWarmupInput(direction){
+  const map={LEFT:"⬅",RIGHT:"➡",UP:"⬆",DOWN:"⬇"};
+  if(map[direction]===sequence[index]){
+    if(!stopwatchStarted) startStopwatch();
+    index++;
+    showArrow();
+  }else{
+    mistakes++;
+    updateWarmupInfo();
+    if(mode==="hard") endWarmup(false);
+  }
+}
+
+function updateWarmupInfo(){
+  if(mode==="easy"){
+    document.getElementById("warmupInfo").innerText="Mistakes: "+mistakes;
+  }else{
+    document.getElementById("warmupInfo").innerText=
+      "Time Left: "+timeLeft+"s | Mistakes: "+mistakes;
+  }
+}
+
+function updateProgress(){
+  let percent=(index/sequence.length)*100;
+  document.getElementById("warmupProgressFill").style.width=percent+"%";
+}
+
+function endWarmup(success){
+  stopWarmupTimers();
+  document.getElementById("warmupArrow").innerText="";
+  document.getElementById("warmupInfo").innerText="";
+  document.getElementById("warmupResult").innerText=success?"PASS!":"FAILED";
+}
+
+// ---------------- KEYBOARD INPUT ----------------
+document.addEventListener("keydown",function(e){
+  const keyMap={ArrowLeft:"LEFT",ArrowRight:"RIGHT",ArrowUp:"UP",ArrowDown:"DOWN"};
+  if(keyMap[e.key]) e.preventDefault();
+  if(document.getElementById("trainerScreen").classList.contains("active")){
+    if(e.key==="ArrowLeft") handleTrainerInput("left");
+    if(e.key==="ArrowRight") handleTrainerInput("right");
+    if(e.key==="Enter") startTrainer();
+  }
+  if(document.getElementById("warmupScreen").classList.contains("active")){
+    if(keyMap[e.key]) handleWarmupInput(keyMap[e.key]);
+  }
+});
+
+// ---------------- CONTROLLER SUPPORT ----------------
+let lastInputTime=0;
+const inputCooldown=150;
+const deadzone=0.6;
+
+function pollController(){
+  const gamepads=navigator.getGamepads();
+  if(!gamepads) {requestAnimationFrame(pollController); return;}
+  const gp=gamepads[0];
+  if(!gp) {requestAnimationFrame(pollController); return;}
+  let now=Date.now();
+  if(now-lastInputTime>inputCooldown){
+    // D-pad
+    if(gp.buttons[14].pressed){processInput("LEFT"); lastInputTime=now;}
+    if(gp.buttons[15].pressed){processInput("RIGHT"); lastInputTime=now;}
+    if(gp.buttons[12].pressed){processInput("UP"); lastInputTime=now;}
+    if(gp.buttons[13].pressed){processInput("DOWN"); lastInputTime=now;}
+    // Analog stick
+    if(gp.axes[0]<-deadzone){processInput("LEFT"); lastInputTime=now;}
+    if(gp.axes[0]>deadzone){processInput("RIGHT"); lastInputTime=now;}
+    if(gp.axes[1]<-deadzone){processInput("UP"); lastInputTime=now;}
+    if(gp.axes[1]>deadzone){processInput("DOWN"); lastInputTime=now;}
+    // Start or X triggers next round
+    if(gp.buttons[9].pressed || gp.buttons[2].pressed){ // 9=Start, 2=X
+      startTrainer();
+      lastInputTime=now;
+    }
+  }
+  requestAnimationFrame(pollController);
+}
+
+function processInput(direction){
+  if(document.getElementById("trainerScreen").classList.contains("active")){
+    if(direction==="LEFT") handleTrainerInput("left");
+    if(direction==="RIGHT") handleTrainerInput("right");
+    if(direction==="UP") handleTrainerInput("up");
+    if(direction==="DOWN") handleTrainerInput("down");
+  }
+  if(document.getElementById("warmupScreen").classList.contains("active")){
+    handleWarmupInput(direction);
+  }
+}
+
+window.addEventListener("gamepadconnected",function(e){
+  console.log("Controller connected:",e.gamepad.id);
+});
+
+pollController();
 
 </script>
-
-
 </body>
 </html>
