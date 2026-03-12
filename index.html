@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Fighting Game Setup Trainer</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    text-align:center;
+    background:#111;
+    color:white;
+}
+
+video{
+    width:700px;
+    margin-top:20px;
+}
+
+#result{
+    font-size:40px;
+    margin-top:20px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<h1>Setup Reaction Trainer</h1>
+
+<select id="characterSelect">
+
+<option value="krillin">Krillin</option>
+<option value="test2">Test2</option>
+<option value="test3">Test3</option>
+
+</select>
+
+<br><br>
+
+<button onclick="start()">Start Training</button>
+
+<br><br>
+
+<video id="setupVideo"></video>
+
+<div id="result"></div>
+
+
+<script>
+
+let correctSide
+let answered = false
+
+
+
+function start(){
+
+    answered = false
+
+    document.getElementById("result").innerText = ""
+
+    const video = document.getElementById("setupVideo")
+
+    const character = document.getElementById("characterSelect").value
+
+    let random = Math.random() < 0.5
+
+
+    if(random){
+
+        video.src = "videos/" + character + "_left.mp4"
+        correctSide = "left"
+
+    }else{
+
+        video.src = "videos/" + character + "_right.mp4"
+        correctSide = "right"
+
+    }
+
+    video.play()
+
+}
+
+
+
+
+function handleInput(direction){
+
+    if(answered) return
+
+    answered = true
+
+    if(direction === correctSide){
+
+        document.getElementById("result").innerText = "PASS"
+
+    }else{
+
+        document.getElementById("result").innerText = "FAIL"
+
+    }
+
+}
+
+
+
+
+document.addEventListener("keydown", function(event){
+
+    if(event.key === "ArrowLeft"){
+        handleInput("left")
+    }
+
+    if(event.key === "ArrowRight"){
+        handleInput("right")
+    }
+
+})
+
+
+
+
+function checkGamepad(){
+
+    const gamepads = navigator.getGamepads()
+
+    if(!gamepads) return
+
+    const gp = gamepads[0]
+
+    if(!gp) return
+
+    if(answered) return
+
+
+
+    let horizontal = gp.axes[0]
+
+    if(horizontal < -0.5){
+
+        handleInput("left")
+
+    }
+
+    if(horizontal > 0.5){
+
+        handleInput("right")
+
+    }
+
+
+
+    if(gp.buttons[14] && gp.buttons[14].pressed){
+
+        handleInput("left")
+
+    }
+
+    if(gp.buttons[15] && gp.buttons[15].pressed){
+
+        handleInput("right")
+
+    }
+
+}
+
+
+
+
+function gameLoop(){
+
+    checkGamepad()
+
+    requestAnimationFrame(gameLoop)
+
+}
+
+
+gameLoop()
+
+
+</script>
+
+
+</body>
+</html>
